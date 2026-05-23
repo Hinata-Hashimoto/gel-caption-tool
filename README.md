@@ -28,7 +28,7 @@ Go to the [Releases page](https://github.com/Hinata-Hashimoto/gel-caption-tool/r
 >
 > macOS は署名のないアプリをブロックします。
 >
-> 1. `GelAnnotator.app` をダブルクリック（警告ダイアログが出ますが、そのままで OK）。
+> 1. `GelAnnotator.app` をダブルクリック（警告ダイアログが出ますが、完了を押せばOK）。
 > 2. **システム設定 → プライバシーとセキュリティ** を開き、**セキュリティ** セクションまでスクロール。
 > 3. *「"GelAnnotator" は開発元を確認できないため…」* という表示の横にある **「このまま開く」** をクリック。
 
