@@ -16,8 +16,21 @@ Go to the [Releases page](https://github.com/Hinata-Hashimoto/gel-caption-tool/r
 | Windows | `GelAnnotator.exe` |
 | macOS | `GelAnnotator.app` (zip) |
 
-> **macOS note:** On first launch, right-click the app and choose "Open" to bypass Gatekeeper.  
-> **macOS の注意:** 初回起動時は右クリック →「開く」を選んでください（Gatekeeper 回避）。
+> ### ⚠️ macOS: First Launch / 初回起動
+>
+> macOS will block the app because it is not signed with an Apple Developer certificate.
+>
+> 1. Double-click `GelAnnotator.app` (a warning dialog appears — that is expected).
+> 2. Open **System Settings → Privacy & Security**, scroll down to the **Security** section.
+> 3. You will see *"GelAnnotator was blocked…"* — click **"Open Anyway"**.
+>
+> ---
+>
+> macOS は署名のないアプリをブロックします。
+>
+> 1. `GelAnnotator.app` をダブルクリック（警告ダイアログが出ますが、そのままで OK）。
+> 2. **システム設定 → プライバシーとセキュリティ** を開き、**セキュリティ** セクションまでスクロール。
+> 3. *「"GelAnnotator" は開発元を確認できないため…」* という表示の横にある **「このまま開く」** をクリック。
 
 ---
 
