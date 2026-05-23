@@ -3,6 +3,10 @@
 A desktop application for semi-automatic annotation of gel electrophoresis images.  
 ゲル電気泳動画像を半自動でアノテーションするデスクトップアプリです。
 
+
+https://github.com/user-attachments/assets/5d3413db-3961-456e-9a16-19554abdc0c8
+
+
 ---
 
 ## Download / ダウンロード
