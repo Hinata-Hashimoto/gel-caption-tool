@@ -1,0 +1,50 @@
+name: Build Windows EXE
+
+on:
+  push:
+    tags:
+      - 'v*'          # vX.X.X タグをプッシュしたときに自動ビルド
+  workflow_dispatch:  # GitHub の Actions 画面から手動実行も可能
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller pillow numpy python-pptx lxml
+
+      - name: Generate .ico (if source PNG exists)
+        run: |
+          if (Test-Path "icon_source.png") {
+            python make_icons.py icon_source.png
+          } else {
+            Write-Host "icon_source.png not found, skipping icon"
+          }
+        shell: pwsh
+
+      - name: Build EXE
+        run: pyinstaller GelCaptionTool_win.spec --noconfirm
+
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GelCaptionTool-Windows
+          path: dist/GelCaptionTool.exe
+          retention-days: 30
+
+      - name: Attach to Release (tag builds only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/GelCaptionTool.exe

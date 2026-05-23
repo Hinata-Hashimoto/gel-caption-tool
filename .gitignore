@@ -1,0 +1,36 @@
+# Build artifacts
+dist/
+build/
+*.spec.bak
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+
+# User settings (generated at runtime)
+config.json
+
+# Icon intermediate files
+*.iconset/
+
+# Test / scratch data
+*.tif
+*.TIF
+test*.png
+test*.csv
+outputtest.*
+aa*.png
+aa*.pptx
+aaaa*.pptx
+図1.png
+てすと.*
+AT0359.*
+20230613*
+20260519*
+
+# Claude Code
+.claude/
