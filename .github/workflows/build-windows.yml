@@ -27,14 +27,14 @@ jobs:
       - name: Generate .ico (if source PNG exists)
         run: |
           if (Test-Path "icon_source.png") {
-            python make_icons.py icon_source.png
+            python build_tools/make_icons.py icon_source.png
           } else {
             Write-Host "icon_source.png not found, skipping icon"
           }
         shell: pwsh
 
       - name: Build EXE
-        run: pyinstaller GelCaptionTool_win.spec --noconfirm
+        run: pyinstaller build_tools/GelCaptionTool_win.spec --noconfirm
 
       - name: Upload EXE artifact
         uses: actions/upload-artifact@v4

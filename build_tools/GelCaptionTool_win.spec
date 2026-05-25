@@ -1,13 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
 # Windows build → produces dist/GelCaptionTool.exe (single file)
-# Run on a Windows machine: pyinstaller GelCaptionTool_win.spec --noconfirm
+# Run on a Windows machine: pyinstaller build_tools/GelCaptionTool_win.spec --noconfirm
 # Or use GitHub Actions: push to GitHub and the workflow builds it automatically.
 #
-# Icon: place app_icon.ico in this directory before building.
-# To create it from a PNG: python3 make_icons.py your_icon.png
+# Icon: place app_icon.ico in assets/ before building.
+# To create it from a PNG: python3 build_tools/make_icons.py your_icon.png
 
 import os
-_icon = 'app_icon.ico' if os.path.exists('app_icon.ico') else None
+_icon = 'assets/app_icon.ico' if os.path.exists('assets/app_icon.ico') else None
 
 a = Analysis(
     ['main.py'],

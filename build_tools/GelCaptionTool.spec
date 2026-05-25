@@ -1,12 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
 # macOS build → produces dist/GelCaptionTool.app
-# Run: pyinstaller GelCaptionTool.spec --noconfirm
+# Run from project root: pyinstaller build_tools/GelCaptionTool.spec --noconfirm
 #
-# Icon: place app_icon.icns in this directory before building.
-# To create it from a PNG: python3 make_icons.py your_icon.png
+# Icon: place app_icon.icns in assets/ before building.
+# To create it from a PNG: python3 build_tools/make_icons.py your_icon.png
 
 import os
-_icon = 'app_icon.icns' if os.path.exists('app_icon.icns') else None
+_icon = 'assets/app_icon.icns' if os.path.exists('assets/app_icon.icns') else None
 
 a = Analysis(
     ['main.py'],
