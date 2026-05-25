@@ -78,7 +78,7 @@ Select a gel image file (PNG, TIFF, JPEG).
    サイドバーのドロップダウンでラダーの種類を選択します。
 2. Click **Ladder Mode**, then click the gel image to place each ladder band from the top (largest) to the bottom (smallest).  
    **Ladder Mode** を押し、画像上でラダーバンドを上（大きい方）から順にクリックして配置します。
-3. Use **Skip Band** (or`→`),to skip the ladder band.
+3. Use **Skip Band** (or`→`),to skip the ladder band.  
    **このバンドをスキップ**（または`→`）でそのラダーバンドをスキップすることができます。
 
 ---
