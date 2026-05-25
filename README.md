@@ -78,8 +78,8 @@ Select a gel image file (PNG, TIFF, JPEG).
    サイドバーのドロップダウンでラダーの種類を選択します。
 2. Click **Ladder Mode**, then click the gel image to place each ladder band from the top (largest) to the bottom (smallest).  
    **Ladder Mode** を押し、画像上でラダーバンドを上（大きい方）から順にクリックして配置します。
-3. After placing all bands, the molecular weight scale is calculated automatically.  
-   すべてのバンドを置くと分子量スケールが自動計算されます。
+3. Use **Skip Band** (or`→`),to skip the ladder band.
+   **このバンドをスキップ**（または`→`）でそのラダーバンドをスキップすることができます。
 
 ---
 
@@ -109,7 +109,7 @@ Click **Band Mode**, then click on the gel image at band positions.
 Click the same spot again to remove a marker.
 
 **Band Mode** を押し、バンドの位置をクリックしてマーカーを追加します。  
-同じ位置をもう一度クリックすると削除できます。
+`Control+z`で戻ることができます。
 
 ---
 
