@@ -43,17 +43,15 @@ Go to the [Releases page](https://github.com/Hinata-Hashimoto/gel-caption-tool/r
 - Load gel images (PNG, TIFF, JPEG)  
   ゲル画像の読み込み（PNG / TIFF / JPEG）
 - Auto-fit ladder band positions from standard ladder data  
-  標準ラダーデータから泳動距離を自動フィッティング
+  標準ラダーデータをプロット
 - Click-to-place well positions and band markers  
   クリックでウェル位置・バンドマーカーを配置
 - Add sample names (manual input or CSV import)  
-  サンプル名の入力（手動 / CSV インポート）
+  サンプル名の入力（手動 / CSV インポート / 表のコピペ）
 - Region labels (e.g. "insert", "vector")  
   領域ラベルの追加
 - Rotate and crop image  
   画像の回転・トリミング
-- White/black background toggle  
-  白背景・黒背景の切り替え
 - Export as **PNG** (≥300 DPI), **SVG**, or **PPTX**  
   **PNG**（300 DPI 以上）・**SVG**・**PPTX** でエクスポート
 - Japanese / English UI toggle (restart required)  
@@ -68,7 +66,7 @@ Go to the [Releases page](https://github.com/Hinata-Hashimoto/gel-caption-tool/r
 **File → Open Image** (or `Ctrl+O`)  
 Select a gel image file (PNG, TIFF, JPEG).
 
-**File → Open Image**（または `Ctrl+O`）でゲル画像ファイルを選択します。
+**File → 画像を開く**（または `Ctrl+O`）でゲル画像ファイルを選択します。
 
 ---
 
@@ -77,7 +75,7 @@ Select a gel image file (PNG, TIFF, JPEG).
 1. Select a ladder type from the dropdown in the sidebar.  
    サイドバーのドロップダウンでラダーの種類を選択します。
 2. Click **Ladder Mode**, then click the gel image to place each ladder band from the top (largest) to the bottom (smallest).  
-   **Ladder Mode** を押し、画像上でラダーバンドを上（大きい方）から順にクリックして配置します。
+   **ラダー配置** を押し、画像上でラダーバンドを上（大きい方）から順にクリックして配置します。
 3. Use **Skip Band** (or`→`),to skip the ladder band.  
    **このバンドをスキップ**（または`→`）でそのラダーバンドをスキップすることができます。
 
@@ -88,37 +86,37 @@ Select a gel image file (PNG, TIFF, JPEG).
 Enter the leftmost and rightmost lane X positions, set the number of wells, and click **Apply wells**.  
 Or click **Pick by click** and click the first and last lane directly on the image.
 
-左端・右端のレーン X 座標を入力してウェル数を設定し、**Apply wells** を押します。  
-または **Pick by click** を押して画像上で直接クリックします。
+左端・右端のレーン X 座標を入力してウェル数を設定し、**ウェルを適用** を押します。  
+または **クリックで設定**（または`s`） を押して画像上で直接クリックします。
 
 ---
 
 ### 4. Enter sample names / サンプル名を入力する
 
 Type names in the text boxes in the sidebar, one per lane.  
-Or use **File → Open CSV** to import names from a CSV file (one name per line).
+Or use **Open CSV** to import names from a CSV file (one name per line).
 
 サイドバーのテキストボックスに各レーンのサンプル名を入力します。  
-CSV ファイル（1 行 1 サンプル名）を **File → Open CSV** で読み込むこともできます。
+CSV ファイル（1 行 1 サンプル名）を **CSV読み込み** で読み込むこともできます。
 
 ---
 
 ### 5. Add band markers / バンドマーカーを追加する
 
 Click **Band Mode**, then click on the gel image at band positions.  
-Click the same spot again to remove a marker.
+Click the to `Control+z` remove a marker.
 
-**Band Mode** を押し、バンドの位置をクリックしてマーカーを追加します。  
+**バンドマーカー** を押し、バンドの位置をクリックしてマーカーを追加します。  
 `Control+z`で戻ることができます。
 
 ---
 
 ### 6. Add region labels / 領域ラベルを追加する
 
-Click **Region Mode**, then drag across the gel image to define a region.  
+Click **Region Mode**, then click the first and last lane across the gel image to define a region.  
 Enter a label name in the dialog that appears.
 
-**Region Mode** を押し、画像上でドラッグして領域を定義します。  
+**領域ラベル** を押し、画像上で左右の2点をクリックして領域を定義します。  
 表示されるダイアログにラベル名を入力します。
 
 ---
