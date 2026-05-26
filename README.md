@@ -139,7 +139,18 @@ Enter a label name in the dialog that appears.
 | `Ctrl+S` | Export PNG |
 | `Ctrl+Shift+S` | Export PPTX |
 | `Ctrl+Z` | Undo |
+| `L` | Ladder mode |
+| `→` | Skip ladder band|
 | `R` | Reset ladder |
+| `B` | Band marker |
+| `C` | Crop mode |
+| `G` | Region mode |
+| `W` | Toggle WB image |
+| `S` | Clik to set L/R of sample lane |
+| `P` | Paste sample names |
+| `A` | Apply wells |
+| `-` | font size minus |
+| `=` | font size plus |
 
 ---
 
