@@ -149,8 +149,8 @@ Enter a label name in the dialog that appears.
 | `S` | Clik to set L/R of sample lane |
 | `P` | Paste sample names |
 | `A` | Apply wells |
-| `-` | font size minus |
-| `=` | font size plus |
+| `-` | font size -|
+| `=` | font size + |
 
 ---
 
