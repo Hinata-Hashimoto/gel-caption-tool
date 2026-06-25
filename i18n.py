@@ -64,6 +64,7 @@ _S: dict[str, tuple[str, str]] = {
     # Menu - Edit
     "menu_edit":            ("編集", "Edit"),
     "menu_undo":            ("元に戻す", "Undo"),
+    "menu_redo":            ("やり直す", "Redo"),
     "menu_reset_ladder":    ("ラダーをリセット", "Reset Ladder"),
     "menu_clear_wells":     ("ウェルラベルをクリア", "Clear Well Labels"),
     "menu_clear_bands":     ("バンドマーカーをクリア", "Clear Band Markers"),
@@ -147,8 +148,8 @@ _S: dict[str, tuple[str, str]] = {
     "confirm_delete_ladder": ("「{name}」を削除しますか？", "Delete '{name}'?"),
     "paste_no_names":       ("名前が見つかりませんでした", "No names found"),
     # Status messages
-    "msg_canvas_hint":      ("ファイル > 画像を開く  または  Ctrl+O",
-                             "File > Open Image  or  Ctrl+O"),
+    "msg_canvas_hint":      ("ファイル > 画像を開く  または  Ctrl+O  または  ドラッグ＆ドロップ",
+                             "File > Open Image  or  Ctrl+O  or  drag & drop"),
     "msg_no_image":         ("画像を先に開いてください", "Please open an image first"),
     "msg_open_visible_first": ("先に可視光画像を開いてください。", "Please open a visible image first."),
     "msg_wb_inactive":      ("WBモード無効（発光画像を読み込んでください）",

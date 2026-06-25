@@ -56,6 +56,7 @@ class GelCaptionApp:
 
         em = tk.Menu(mb, tearoff=0)
         em.add_command(label=t("menu_undo"), command=self._undo, accelerator="Ctrl+Z")
+        em.add_command(label=t("menu_redo"), command=self._redo, accelerator="Ctrl+Y")
         em.add_command(label=t("menu_reset_ladder"), command=self._reset_ladder, accelerator="R")
         em.add_command(label=t("menu_clear_wells"), command=self._clear_wells)
         em.add_command(label=t("menu_clear_bands"), command=self._clear_bands)
@@ -96,6 +97,13 @@ class GelCaptionApp:
                                     on_status=self._set_status, bg="#2a2a2a")
         self.gel_canvas.pack(fill=tk.BOTH, expand=True)
         self.gel_canvas.on_crop_done = lambda: self._sync_mode_btns("NORMAL")
+
+        try:
+            from tkinterdnd2 import DND_FILES
+            self.gel_canvas._canvas.drop_target_register(DND_FILES)
+            self.gel_canvas._canvas.dnd_bind('<<Drop>>', self._on_drop)
+        except Exception:
+            pass
 
     def _build_sidebar(self, p):
 
@@ -238,6 +246,7 @@ class GelCaptionApp:
         for key, fn in [
             ("<Control-o>", self._open_image),
             ("<Control-z>", self._undo),
+            ("<Control-y>", self._redo),
             ("<Return>",    self._on_enter),
             ("<Escape>",    lambda e: self._set_mode("NORMAL")),
         ]:
@@ -346,6 +355,7 @@ class GelCaptionApp:
             self.state.sample_annotations.clear()
             self.state.band_markers.clear()
             self.state.undo_history.clear()
+            self.state.redo_history.clear()
             self._source_path = path
             self.root.after(50, self.gel_canvas.refresh)
             self._set_status(t("msg_load_complete", name=path.split('/')[-1]))
@@ -715,13 +725,45 @@ class GelCaptionApp:
         self.gel_canvas.refresh()
         self._set_status(t("msg_bands_cleared"))
 
-    # ── undo ──────────────────────────────────────────────────────────────────
+    # ── undo / redo ───────────────────────────────────────────────────────────
 
     def _undo(self):
         msg = self.state.undo()
         self.gel_canvas.refresh()
         if msg:
             self._set_status(msg)
+
+    def _redo(self):
+        msg = self.state.redo()
+        self.gel_canvas.refresh()
+        if msg:
+            self._set_status(msg)
+
+    # ── drag & drop ───────────────────────────────────────────────────────────
+
+    def _on_drop(self, event):
+        import re
+        paths = [p[0] or p[1] for p in re.findall(r'\{([^}]+)\}|(\S+)', event.data)]
+        image_exts = {'.png', '.jpg', '.jpeg', '.tif', '.tiff', '.bmp'}
+        for path in paths:
+            if any(path.lower().endswith(ext) for ext in image_exts):
+                try:
+                    img = self._load_image(path)
+                    self.state.image_visible = img
+                    self.state.image_lumi = None
+                    self.state.wb_mode = False
+                    self.state.show_lumi = False
+                    self.state.ladder_annotations.clear()
+                    self.state.sample_annotations.clear()
+                    self.state.band_markers.clear()
+                    self.state.undo_history.clear()
+                    self.state.redo_history.clear()
+                    self._source_path = path
+                    self.root.after(50, self.gel_canvas.refresh)
+                    self._set_status(t("msg_load_complete", name=path.split('/')[-1]))
+                except Exception as exc:
+                    messagebox.showerror(t("err_title"), t("msg_open_error", exc=exc))
+                break
 
     # ── export ────────────────────────────────────────────────────────────────
 
