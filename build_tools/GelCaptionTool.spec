@@ -6,11 +6,13 @@
 # To create it from a PNG: python3 build_tools/make_icons.py your_icon.png
 
 import os
-_icon = 'assets/app_icon.icns' if os.path.exists('assets/app_icon.icns') else None
+_root = os.path.dirname(SPECPATH)
+_icon_path = os.path.join(_root, 'assets', 'app_icon.icns')
+_icon = _icon_path if os.path.exists(_icon_path) else None
 
 a = Analysis(
-    ['main.py'],
-    pathex=[],
+    [os.path.join(_root, 'main.py')],
+    pathex=[_root],
     binaries=[],
     datas=[],
     hiddenimports=[
