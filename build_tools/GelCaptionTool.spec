@@ -26,6 +26,7 @@ a = Analysis(
         'pptx.oxml.ns',
         'lxml',
         'lxml.etree',
+        'tkinterdnd2',
     ],
     hookspath=[],
     hooksconfig={},
