@@ -158,25 +158,26 @@ Enter a label name in the dialog that appears.
 
 ```bash
 # Install dependencies
-pip install pillow numpy python-pptx lxml
+pip install pillow numpy python-pptx lxml tkinterdnd2
 
 # Run directly
 python main.py
 
 # Build macOS .app
-pyinstaller GelCaptionTool.spec --noconfirm
+pyinstaller build_tools/GelCaptionTool.spec --noconfirm
 
 # Build Windows .exe (run on Windows)
-pyinstaller GelCaptionTool_win.spec --noconfirm
+pyinstaller build_tools/GelCaptionTool_win.spec --noconfirm
 ```
 
 ### Requirements
 
-- Python 3.9+
+- Python 3.9+ (with tkinter — use the official python.org installer on Windows, or Homebrew's `python-tk` on macOS)
 - Pillow
 - numpy
 - python-pptx
 - lxml
+- tkinterdnd2 (drag & drop)
 
 ---
 

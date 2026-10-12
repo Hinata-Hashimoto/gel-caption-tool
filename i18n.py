@@ -48,6 +48,26 @@ def save_lang(lang: str):
         pass
 
 
+def load_keybindings() -> dict:
+    try:
+        return json.loads(_CONFIG_PATH.read_text()).get("keybindings", {})
+    except Exception:
+        return {}
+
+
+def save_keybindings(keymap: dict):
+    try:
+        cfg = {}
+        try:
+            cfg = json.loads(_CONFIG_PATH.read_text())
+        except Exception:
+            pass
+        cfg["keybindings"] = keymap
+        _CONFIG_PATH.write_text(json.dumps(cfg, indent=2, ensure_ascii=False))
+    except Exception:
+        pass
+
+
 def get_lang() -> str:
     return _LANG
 
@@ -68,6 +88,43 @@ _S: dict[str, tuple[str, str]] = {
     "menu_reset_ladder":    ("ラダーをリセット", "Reset Ladder"),
     "menu_clear_wells":     ("ウェルラベルをクリア", "Clear Well Labels"),
     "menu_clear_bands":     ("バンドマーカーをクリア", "Clear Band Markers"),
+    "menu_keybindings":     ("ショートカットキーの設定…", "Keyboard Shortcuts…"),
+    "dlg_keybindings":      ("ショートカットキーの設定", "Keyboard Shortcuts"),
+    "dlg_keybinding_edit":  ("ショートカットを編集", "Edit Shortcut"),
+    "kb_col_action":        ("機能", "Action"),
+    "kb_col_key":           ("キー", "Key"),
+    "kb_add":               ("追加…", "Add…"),
+    "kb_change":            ("変更…", "Change…"),
+    "kb_delete":            ("削除", "Delete"),
+    "kb_reset":             ("初期値に戻す", "Reset to Defaults"),
+    "kb_close":             ("閉じる", "Close"),
+    "kb_capture":           ("キーを入力…", "Capture Key…"),
+    "kb_press_now":         ("キーを押してください（Ctrl / Shift と組み合わせ可）",
+                             "Press a key (Ctrl / Shift combinations allowed)"),
+    "kb_no_key":            ("（未入力）", "(not set)"),
+    "kb_select_row":        ("変更・削除する行を選択してください", "Select a row first"),
+    "kb_conflict":          ("「{key}」は既に「{name}」に割り当てられています",
+                             "\"{key}\" is already assigned to \"{name}\""),
+    "kb_reset_confirm":     ("ショートカットキーを初期値に戻しますか？", "Reset all shortcuts to defaults?"),
+    "kb_act_open_image":    ("画像を開く", "Open Image"),
+    "kb_act_undo":          ("元に戻す", "Undo"),
+    "kb_act_redo":          ("やり直す", "Redo"),
+    "kb_act_enter":         ("確定（Enter）", "Confirm (Enter)"),
+    "kb_act_escape":        ("通常モードに戻す", "Return to Normal Mode"),
+    "kb_act_mode_ladder":   ("ラダーモード", "Ladder Mode"),
+    "kb_act_mode_band":     ("バンドマーカーモード", "Band Marker Mode"),
+    "kb_act_mode_crop":     ("切り取りモード", "Crop Mode"),
+    "kb_act_mode_region":   ("領域ラベルモード", "Region Label Mode"),
+    "kb_act_pick_wells":    ("ウェル位置をクリックで設定", "Set Wells by Click"),
+    "kb_act_paste_names":   ("サンプル名を貼り付け", "Paste Sample Names"),
+    "kb_act_apply_wells":   ("ウェルを適用", "Apply Wells"),
+    "kb_act_font_larger":   ("フォントを大きく", "Larger Font"),
+    "kb_act_font_smaller":  ("フォントを小さく", "Smaller Font"),
+    "kb_act_skip_band":     ("ラダーのバンドをスキップ", "Skip Ladder Band"),
+    "kb_act_export_png":    ("PNG書き出し", "Export PNG"),
+    "kb_act_export_pptx":   ("PPTX書き出し", "Export PPTX"),
+    "kb_act_toggle_wb":     ("WBモード切替", "Toggle WB Mode"),
+    "kb_act_reset_ladder":  ("ラダーをリセット", "Reset Ladder"),
     # Menu - Language
     "menu_language":        ("言語", "Language"),
     "lang_japanese":        ("日本語", "Japanese"),
@@ -84,23 +141,23 @@ _S: dict[str, tuple[str, str]] = {
     "sec_font":             ("文字サイズ", "Font Size"),
     "sec_export":           ("書き出し", "Export"),
     # Sidebar buttons
-    "btn_ladder_mode":      ("ラダー配置  [L]", "Place Ladder  [L]"),
-    "btn_band_mode":        ("バンドマーカー  [B]", "Band Marker  [B]"),
-    "btn_crop_mode":        ("切り取り  [C]", "Crop  [C]"),
-    "btn_region_mode":      ("領域ラベル  [G]", "Region Label  [G]"),
+    "btn_ladder_mode":      ("ラダー配置", "Place Ladder"),
+    "btn_band_mode":        ("バンドマーカー", "Band Marker"),
+    "btn_crop_mode":        ("切り取り", "Crop"),
+    "btn_region_mode":      ("領域ラベル", "Region Label"),
     "btn_rotate_ccw":       ("↺ 左90°", "↺ CCW 90°"),
     "btn_rotate_cw":        ("↻ 右90°", "↻ CW 90°"),
-    "btn_toggle_wb":        ("WB画像切替  [W]", "Toggle WB  [W]"),
+    "btn_toggle_wb":        ("WB画像切替", "Toggle WB"),
     "btn_edit_ladders":     ("ラダーを編集…", "Edit Ladders…"),
-    "btn_reset_ladder":     ("ラダーリセット  [R]", "Reset Ladder  [R]"),
-    "btn_skip_band":        ("このバンドをスキップ  [→]", "Skip Band  [→]"),
-    "btn_pick_wells":       ("← → クリックで設定 [S]", "Click to Set L/R  [S]"),
+    "btn_reset_ladder":     ("ラダーリセット", "Reset Ladder"),
+    "btn_skip_band":        ("このバンドをスキップ", "Skip Band"),
+    "btn_pick_wells":       ("← → クリックで設定", "Click to Set L/R"),
     "btn_load_csv":         ("CSV読み込み…", "Load CSV…"),
-    "btn_paste_names":      ("貼り付けで入力… [P]", "Paste Names…  [P]"),
-    "btn_apply_wells":      ("ウェルを適用 [A]", "Apply Wells  [A]"),
+    "btn_paste_names":      ("貼り付けで入力…", "Paste Names…"),
+    "btn_apply_wells":      ("ウェルを適用", "Apply Wells"),
     "btn_clear_wells":      ("ウェルをクリア", "Clear Wells"),
-    "btn_export_png":       ("PNG書き出し… [Ctrl+S]", "Export PNG…  [Ctrl+S]"),
-    "btn_export_pptx":      ("PPTX書き出し… [⇧S]", "Export PPTX…  [⇧S]"),
+    "btn_export_png":       ("PNG書き出し…", "Export PNG…"),
+    "btn_export_pptx":      ("PPTX書き出し…", "Export PPTX…"),
     "btn_apply":            ("適用", "Apply"),
     "btn_cancel":           ("キャンセル", "Cancel"),
     "btn_new":              ("＋ 新規", "+ New"),
@@ -160,6 +217,8 @@ _S: dict[str, tuple[str, str]] = {
                              "Rotation will clear all annotations. Continue?"),
     "msg_ladder_reset":     ("ラダーアノテーションをリセットしました", "Ladder annotations reset"),
     "msg_wells_applied":    ("{n} ウェルラベルを配置しました", "{n} well labels placed"),
+    "msg_wells_applied_auto": ("サンプル名未入力のため、{n} ウェルに連番（1〜{n}）を自動入力しました",
+                             "No sample names entered — auto-numbered {n} wells (1-{n})"),
     "msg_wells_cleared":    ("ウェルラベルをクリアしました", "Well labels cleared"),
     "msg_bands_cleared":    ("バンドマーカーをクリアしました", "Band markers cleared"),
     "msg_region_added":     ("領域「{name}」を追加しました", "Region '{name}' added"),
@@ -172,7 +231,6 @@ _S: dict[str, tuple[str, str]] = {
     "msg_export_png_done":  ("PNG書き出し完了: {name}", "PNG exported: {name}"),
     "msg_export_pptx_done": ("PPTX書き出し完了: {name}", "PPTX exported: {name}"),
     "msg_csv_loaded":       ("{n} サンプル名を読み込みました", "{n} sample names loaded"),
-    "msg_no_csv":           ("CSVを先に読み込んでください", "Please load a CSV first"),
     "msg_set_right":        ("右端X = {x} に設定しました", "Right X = {x} set"),
     "msg_set_left":         ("左端X = {x}。次に右端をクリックしてください",
                              "Left X = {x}. Now click the right edge"),

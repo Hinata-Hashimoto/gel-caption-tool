@@ -9,10 +9,72 @@ from PIL import Image
 from annotation_model import AppState, SampleAnnotation
 from canvas_widget import GelCanvas
 from ladder_data import LADDERS
-from i18n import t, save_lang, get_lang
+from i18n import t, save_lang, get_lang, load_keybindings, save_keybindings
 
 GITHUB_URL   = "https://github.com/Hinata-Hashimoto/gel-caption-tool"
 HOMEPAGE_URL = "https://sites.google.com/view/hinatahashimoto"
+
+DEFAULT_KEYMAP: list[tuple[str, list[str]]] = [
+    ("open_image",   ["<Control-o>", "<Control-n>"]),
+    ("undo",         ["<Control-z>"]),
+    ("redo",         ["<Control-y>"]),
+    ("enter",        ["<Return>"]),
+    ("escape",       ["<Escape>"]),
+    ("mode_ladder",  ["<l>", "<L>"]),
+    ("mode_band",    ["<b>", "<B>"]),
+    ("mode_crop",    ["<c>", "<C>"]),
+    ("mode_region",  ["<g>", "<G>"]),
+    ("pick_wells",   ["<s>", "<S>"]),
+    ("paste_names",  ["<p>", "<P>"]),
+    ("apply_wells",  ["<a>", "<A>"]),
+    ("font_larger",  ["<equal>", "<plus>"]),
+    ("font_smaller", ["<minus>"]),
+    ("skip_band",    ["<Right>"]),
+    ("export_png",   ["<Control-s>"]),
+    ("export_pptx",  ["<Control-S>"]),
+    ("toggle_wb",    ["<w>", "<W>"]),
+    ("reset_ladder", ["<r>", "<R>"]),
+]
+
+_MODIFIER_KEYSYMS = {
+    "Shift_L", "Shift_R", "Control_L", "Control_R", "Alt_L", "Alt_R",
+    "Meta_L", "Meta_R", "Option_L", "Option_R", "Command_L", "Command_R",
+    "Super_L", "Super_R", "Caps_Lock", "Win_L", "Win_R", "Mode_switch",
+    "ISO_Level3_Shift",
+}
+
+
+def _key_sequence(event) -> str | None:
+    ks = event.keysym
+    if not ks or ks in _MODIFIER_KEYSYMS:
+        return None
+    parts = []
+    if event.state & 0x4:
+        parts.append("Control")
+    if event.state & 0x1 and len(ks) != 1:
+        parts.append("Shift")
+    parts.append(ks)
+    return "<" + "-".join(parts) + ">"
+
+
+_KEYSYM_DISPLAY = {
+    "Right": "→", "Left": "←", "Up": "↑", "Down": "↓",
+    "equal": "=", "plus": "+", "minus": "−", "space": "Space",
+    "Escape": "Esc",
+}
+
+
+def _seq_label(seq: str) -> str:
+    parts = seq.strip("<>").split("-")
+    keysym = parts[-1]
+    mods = ["Ctrl" if m == "Control" else m for m in parts[:-1]]
+    if len(keysym) == 1 and keysym.isalpha():
+        if keysym.isupper():
+            mods.append("Shift")
+        keysym = keysym.upper()
+    else:
+        keysym = _KEYSYM_DISPLAY.get(keysym, keysym)
+    return "+".join(mods + [keysym])
 
 # ── Sidebar colour constants (light theme → black text) ───────────────────────
 SBG   = "#f4f4f4"   # sidebar background
@@ -33,6 +95,8 @@ class GelCaptionApp:
         self.state = AppState()
         self._csv_names: list[str] = []
         self._source_path: str = ""
+        self._keymap: dict[str, list[str]] = self._load_keymap()
+        self._bound_seqs: list[str] = []
 
         self._build_menu()
         self._build_ui()
@@ -44,22 +108,28 @@ class GelCaptionApp:
         mb = tk.Menu(self.root)
 
         fm = tk.Menu(mb, tearoff=0)
-        fm.add_command(label=t("menu_open_image"), command=self._open_image, accelerator="Ctrl+O")
+        fm.add_command(label=t("menu_open_image"), command=self._open_image,
+                       accelerator=self._accel("open_image"))
         fm.add_command(label=t("menu_open_lumi"), command=self._open_lumi)
         fm.add_separator()
-        fm.add_command(label=t("menu_export_png"), command=self._export_png, accelerator="Ctrl+S")
-        fm.add_command(label=t("menu_export_pptx"), command=self._export_pptx, accelerator="Ctrl+Shift+S")
+        fm.add_command(label=t("menu_export_png"), command=self._export_png,
+                       accelerator=self._accel("export_png"))
+        fm.add_command(label=t("menu_export_pptx"), command=self._export_pptx,
+                       accelerator=self._accel("export_pptx"))
         fm.add_command(label=t("menu_export_svg"), command=self._export_svg)
         fm.add_separator()
         fm.add_command(label=t("menu_quit"), command=self.root.quit)
         mb.add_cascade(label=t("menu_file"), menu=fm)
 
         em = tk.Menu(mb, tearoff=0)
-        em.add_command(label=t("menu_undo"), command=self._undo, accelerator="Ctrl+Z")
-        em.add_command(label=t("menu_redo"), command=self._redo, accelerator="Ctrl+Y")
-        em.add_command(label=t("menu_reset_ladder"), command=self._reset_ladder, accelerator="R")
+        em.add_command(label=t("menu_undo"), command=self._undo, accelerator=self._accel("undo"))
+        em.add_command(label=t("menu_redo"), command=self._redo, accelerator=self._accel("redo"))
+        em.add_command(label=t("menu_reset_ladder"), command=self._reset_ladder,
+                       accelerator=self._accel("reset_ladder"))
         em.add_command(label=t("menu_clear_wells"), command=self._clear_wells)
         em.add_command(label=t("menu_clear_bands"), command=self._clear_bands)
+        em.add_separator()
+        em.add_command(label=t("menu_keybindings"), command=self._open_keybindings_dialog)
         mb.add_cascade(label=t("menu_edit"), menu=em)
 
         lm = tk.Menu(mb, tearoff=0)
@@ -123,12 +193,23 @@ class GelCaptionApp:
             b.pack(padx=5, pady=1)
             return b
 
+        self._shortcut_buttons = []  # [(button, base_text_fn, action_id), ...]
+
+        def sbtn(base_fn, action, cmd, width=18):
+            b = btn(self._btn_text(base_fn, action), cmd, width=width)
+            self._shortcut_buttons.append((b, base_fn, action))
+            return b
+
         # ── Mode buttons ──────────────────────────────────────────────────────
         section(t("sec_mode"))
-        self._btn_ladder = btn(t("btn_ladder_mode"), lambda: self._set_mode("LADDER"))
-        self._btn_band   = btn(t("btn_band_mode"),   lambda: self._set_mode("BAND"))
-        self._btn_crop   = btn(t("btn_crop_mode"),   lambda: self._set_mode("CROP"))
-        self._btn_region = btn(t("btn_region_mode"), self._set_mode_region)
+        self._btn_ladder = sbtn(lambda: t("btn_ladder_mode"), "mode_ladder",
+                                lambda: self._set_mode("LADDER"))
+        self._btn_band   = sbtn(lambda: t("btn_band_mode"), "mode_band",
+                                lambda: self._set_mode("BAND"))
+        self._btn_crop   = sbtn(lambda: t("btn_crop_mode"), "mode_crop",
+                                lambda: self._set_mode("CROP"))
+        self._btn_region = sbtn(lambda: t("btn_region_mode"), "mode_region",
+                                self._set_mode_region)
 
         # ── Rotate ───────────────────────────────────────────────────────────────
         sep()
@@ -144,7 +225,7 @@ class GelCaptionApp:
                       padx=3, pady=1).pack(side=tk.LEFT, expand=True, fill=tk.X)
 
         sep()
-        btn(t("btn_toggle_wb"), self._toggle_wb)
+        sbtn(lambda: t("btn_toggle_wb"), "toggle_wb", self._toggle_wb)
 
         # ── Ladder type ───────────────────────────────────────────────────────
         sep()
@@ -157,8 +238,8 @@ class GelCaptionApp:
                                 lambda e: setattr(self.state, 'ladder_type', self._ladder_var.get()))
 
         btn(t("btn_edit_ladders"),  self._edit_ladders)
-        btn(t("btn_reset_ladder"),  self._reset_ladder)
-        btn(t("btn_skip_band"),     self._skip_ladder)
+        sbtn(lambda: t("btn_reset_ladder"), "reset_ladder", self._reset_ladder)
+        sbtn(lambda: t("btn_skip_band"), "skip_band", self._skip_ladder)
 
         # Ladder line style
         section(t("sec_ladder_style"))
@@ -193,7 +274,7 @@ class GelCaptionApp:
             tk.Entry(row, textvariable=var, width=9,
                      font=("Helvetica", 8)).pack(side=tk.LEFT, padx=2)
 
-        btn(t("btn_pick_wells"), self._pick_wells_by_click)
+        sbtn(lambda: t("btn_pick_wells"), "pick_wells", self._pick_wells_by_click)
 
         # Num wells
         row3 = tk.Frame(p, bg=SBG)
@@ -208,28 +289,34 @@ class GelCaptionApp:
         self._font_size_var = tk.StringVar(value="10")
         frow = tk.Frame(p, bg=SBG)
         frow.pack(padx=5, pady=1)
-        tk.Button(frow, text="－ [−]", command=self._font_smaller,
+        btn_font_smaller = tk.Button(frow, text=self._btn_text(lambda: "－", "font_smaller"),
+                  command=self._font_smaller,
                   bg=B_BG, fg=L_FG, relief=tk.GROOVE,
                   font=("Helvetica", 8), cursor="hand2",
-                  activebackground=B_ACT, padx=4, pady=1).pack(side=tk.LEFT)
+                  activebackground=B_ACT, padx=4, pady=1)
+        btn_font_smaller.pack(side=tk.LEFT)
+        self._shortcut_buttons.append((btn_font_smaller, lambda: "－", "font_smaller"))
         tk.Label(frow, textvariable=self._font_size_var, bg=SBG, fg=L_FG,
                  font=("Helvetica", 8), width=3, anchor=tk.CENTER).pack(side=tk.LEFT)
-        tk.Button(frow, text="＋ [=]", command=self._font_larger,
+        btn_font_larger = tk.Button(frow, text=self._btn_text(lambda: "＋", "font_larger"),
+                  command=self._font_larger,
                   bg=B_BG, fg=L_FG, relief=tk.GROOVE,
                   font=("Helvetica", 8), cursor="hand2",
-                  activebackground=B_ACT, padx=4, pady=1).pack(side=tk.LEFT)
+                  activebackground=B_ACT, padx=4, pady=1)
+        btn_font_larger.pack(side=tk.LEFT)
+        self._shortcut_buttons.append((btn_font_larger, lambda: "＋", "font_larger"))
 
         sep()
         btn(t("btn_load_csv"),    self._load_csv)
-        btn(t("btn_paste_names"), self._paste_names)
-        btn(t("btn_apply_wells"), self._apply_wells)
+        sbtn(lambda: t("btn_paste_names"), "paste_names", self._paste_names)
+        sbtn(lambda: t("btn_apply_wells"), "apply_wells", self._apply_wells)
         btn(t("btn_clear_wells"), self._clear_wells)
 
         # ── Export ────────────────────────────────────────────────────────────
         sep()
         section(t("sec_export"))
-        btn(t("btn_export_png"),  self._export_png)
-        btn(t("btn_export_pptx"), self._export_pptx)
+        sbtn(lambda: t("btn_export_png"), "export_png", self._export_png)
+        sbtn(lambda: t("btn_export_pptx"), "export_pptx", self._export_pptx)
         btn(t("btn_export_svg"),  self._export_svg)
 
         # Mode button references (for highlighting active mode)
@@ -242,42 +329,222 @@ class GelCaptionApp:
 
     # ── key bindings ──────────────────────────────────────────────────────────
 
+    def _action_callbacks(self) -> dict:
+        return {
+            "open_image":   self._open_image,
+            "undo":         self._undo,
+            "redo":         self._redo,
+            "enter":        self._on_enter,
+            "escape":       lambda: self._set_mode("NORMAL"),
+            "mode_ladder":  lambda: self._set_mode("LADDER"),
+            "mode_band":    lambda: self._set_mode("BAND"),
+            "mode_crop":    lambda: self._set_mode("CROP"),
+            "mode_region":  self._set_mode_region,
+            "pick_wells":   self._pick_wells_by_click,
+            "paste_names":  self._paste_names,
+            "apply_wells":  self._apply_wells,
+            "font_larger":  self._font_larger,
+            "font_smaller": self._font_smaller,
+            "skip_band":    self._skip_ladder,
+            "export_png":   self._export_png,
+            "export_pptx":  self._export_pptx,
+            "toggle_wb":    self._toggle_wb,
+            "reset_ladder": self._reset_ladder,
+        }
+
+    def _load_keymap(self) -> dict[str, list[str]]:
+        saved = load_keybindings()
+        keymap = {action: list(seqs) for action, seqs in DEFAULT_KEYMAP}
+        for action in keymap:
+            value = saved.get(action)
+            if isinstance(value, list) and all(isinstance(s, str) for s in value):
+                keymap[action] = value
+        return keymap
+
     def _bind_keys(self):
-        for key, fn in [
-            ("<Control-o>", self._open_image),
-            ("<Control-z>", self._undo),
-            ("<Control-y>", self._redo),
-            ("<Return>",    self._on_enter),
-            ("<Escape>",    lambda e: self._set_mode("NORMAL")),
-        ]:
-            self.root.bind(key, lambda e, f=fn: f())
+        for seq in self._bound_seqs:
+            self.root.unbind(seq)
+        self._bound_seqs = []
+        callbacks = self._action_callbacks()
+        for action, seqs in self._keymap.items():
+            fn = callbacks[action]
+            for seq in seqs:
+                self.root.bind(seq, lambda e, f=fn: f())
+                self._bound_seqs.append(seq)
 
-        for key, mode in [
-            ("<l>", "LADDER"), ("<L>", "LADDER"),
-            ("<b>", "BAND"),   ("<B>", "BAND"),
-            ("<c>", "CROP"),   ("<C>", "CROP"),
-        ]:
-            self.root.bind(key, lambda e, m=mode: self._set_mode(m))
+    def _accel(self, action: str) -> str:
+        return " / ".join(dict.fromkeys(_seq_label(s) for s in self._keymap.get(action, [])))
 
-        for key in ("<s>", "<S>"):
-            self.root.bind(key, lambda e: self._pick_wells_by_click())
-        for key in ("<p>", "<P>"):
-            self.root.bind(key, lambda e: self._paste_names())
-        for key in ("<a>", "<A>"):
-            self.root.bind(key, lambda e: self._apply_wells())
-        self.root.bind("<equal>", lambda e: self._font_larger())
-        self.root.bind("<plus>",  lambda e: self._font_larger())
-        self.root.bind("<minus>", lambda e: self._font_smaller())
-        for key in ("<g>", "<G>"):
-            self.root.bind(key, lambda e: self._set_mode_region())
-        self.root.bind("<Right>", lambda e: self._skip_ladder())
-        self.root.bind("<Control-s>", lambda e: self._export_png())
-        self.root.bind("<Control-S>", lambda e: self._export_pptx())
+    def _btn_hint(self, action: str) -> str:
+        seqs = self._keymap.get(action) or []
+        return _seq_label(seqs[0]) if seqs else ""
 
-        for key in ("<w>", "<W>"):
-            self.root.bind(key, lambda e: self._toggle_wb())
-        for key in ("<r>", "<R>"):
-            self.root.bind(key, lambda e: self._reset_ladder())
+    def _btn_text(self, base_fn, action: str) -> str:
+        base = base_fn()
+        hint = self._btn_hint(action)
+        return f"{base}  [{hint}]" if hint else base
+
+    def _refresh_shortcut_labels(self):
+        for widget, base_fn, action in getattr(self, "_shortcut_buttons", []):
+            widget.config(text=self._btn_text(base_fn, action))
+
+    def _apply_keymap(self, pairs: list[tuple[str, str]]):
+        keymap: dict[str, list[str]] = {action: [] for action, _ in DEFAULT_KEYMAP}
+        for action, seq in pairs:
+            keymap[action].append(seq)
+        self._keymap = keymap
+        save_keybindings(keymap)
+        self._bind_keys()
+        self._build_menu()
+        self._refresh_shortcut_labels()
+
+    def _open_keybindings_dialog(self):
+        dlg = tk.Toplevel(self.root)
+        dlg.title(t("dlg_keybindings"))
+        dlg.transient(self.root)
+        dlg.geometry("480x400")
+        dlg.grab_set()
+
+        table_frame = tk.Frame(dlg)
+        table_frame.pack(fill=tk.BOTH, expand=True, padx=12, pady=(12, 6))
+        tree = ttk.Treeview(table_frame, columns=("action", "key"),
+                            show="headings", selectmode="browse")
+        tree.heading("action", text=t("kb_col_action"))
+        tree.heading("key", text=t("kb_col_key"))
+        tree.column("action", width=260)
+        tree.column("key", width=160)
+        scroll = ttk.Scrollbar(table_frame, orient=tk.VERTICAL, command=tree.yview)
+        tree.configure(yscrollcommand=scroll.set)
+        tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scroll.pack(side=tk.RIGHT, fill=tk.Y)
+
+        def pairs() -> list[tuple[str, str]]:
+            return [(action, seq) for action, seqs in self._keymap.items() for seq in seqs]
+
+        def refresh():
+            tree.delete(*tree.get_children())
+            for i, (action, seq) in enumerate(pairs()):
+                tree.insert("", tk.END, iid=str(i),
+                            values=(t(f"kb_act_{action}"), _seq_label(seq)))
+
+        def selected_index() -> int | None:
+            sel = tree.selection()
+            if not sel:
+                messagebox.showwarning(t("warn_title"), t("kb_select_row"), parent=dlg)
+                return None
+            return int(sel[0])
+
+        def add():
+            result = self._edit_binding(dlg, pairs(), None, None, None)
+            if result:
+                self._apply_keymap(pairs() + [result])
+                refresh()
+
+        def change():
+            idx = selected_index()
+            if idx is None:
+                return
+            current = pairs()
+            action, seq = current[idx]
+            result = self._edit_binding(dlg, current, idx, action, seq)
+            if result:
+                current[idx] = result
+                self._apply_keymap(current)
+                refresh()
+
+        def delete():
+            idx = selected_index()
+            if idx is None:
+                return
+            current = pairs()
+            del current[idx]
+            self._apply_keymap(current)
+            refresh()
+
+        def reset():
+            if messagebox.askyesno(t("confirm_title"), t("kb_reset_confirm"), parent=dlg):
+                self._apply_keymap([(action, seq) for action, seqs in DEFAULT_KEYMAP
+                                    for seq in seqs])
+                refresh()
+
+        btn_row = tk.Frame(dlg)
+        btn_row.pack(fill=tk.X, padx=12, pady=(0, 12))
+        tk.Button(btn_row, text=t("kb_close"), command=dlg.destroy).pack(side=tk.RIGHT, padx=4)
+        tk.Button(btn_row, text=t("kb_reset"), command=reset).pack(side=tk.LEFT, padx=4)
+        tk.Button(btn_row, text=t("kb_delete"), command=delete).pack(side=tk.LEFT, padx=4)
+        tk.Button(btn_row, text=t("kb_change"), command=change).pack(side=tk.LEFT, padx=4)
+        tk.Button(btn_row, text=t("kb_add"), command=add).pack(side=tk.LEFT, padx=4)
+
+        refresh()
+
+    def _edit_binding(self, parent, current: list[tuple[str, str]], exclude: int | None,
+                      action: str | None, seq: str | None) -> tuple[str, str] | None:
+        action_ids = [a for a, _ in DEFAULT_KEYMAP]
+        top = tk.Toplevel(parent)
+        top.title(t("dlg_keybinding_edit"))
+        top.transient(parent)
+        top.resizable(False, False)
+        top.grab_set()
+
+        body = tk.Frame(top)
+        body.pack(padx=14, pady=12)
+        tk.Label(body, text=t("kb_col_action")).grid(row=0, column=0, sticky="w", pady=4)
+        combo = ttk.Combobox(body, values=[t(f"kb_act_{a}") for a in action_ids],
+                             state="readonly", width=30)
+        combo.current(action_ids.index(action) if action else 0)
+        combo.grid(row=0, column=1, sticky="w", pady=4, padx=(8, 0))
+
+        tk.Label(body, text=t("kb_col_key")).grid(row=1, column=0, sticky="w", pady=4)
+        captured: dict[str, str | None] = {"seq": seq}
+        key_var = tk.StringVar(value=_seq_label(seq) if seq else t("kb_press_now"))
+        tk.Label(body, textvariable=key_var, width=30, anchor="w", relief="sunken",
+                 padx=4).grid(row=1, column=1, sticky="w", pady=4, padx=(8, 0))
+
+        def on_key(event):
+            s = _key_sequence(event)
+            if s is not None:
+                captured["seq"] = s
+                key_var.set(_seq_label(s))
+            return "break"
+
+        def start_capture():
+            captured["seq"] = None
+            key_var.set(t("kb_press_now"))
+            top.focus_force()
+
+        top.bind("<KeyPress>", on_key)
+        combo.bind("<<ComboboxSelected>>", lambda e: top.focus_force())
+        top.after(50, top.focus_force)
+
+        tk.Button(body, text=t("kb_capture"), command=start_capture).grid(
+            row=2, column=1, sticky="w", pady=(4, 0), padx=(8, 0))
+
+        result: dict[str, tuple[str, str]] = {}
+
+        def ok():
+            new_seq = captured["seq"]
+            if not new_seq:
+                messagebox.showwarning(t("warn_title"), t("kb_no_key"), parent=top)
+                return
+            for i, (other_action, other_seq) in enumerate(current):
+                if i != exclude and other_seq == new_seq:
+                    messagebox.showerror(
+                        t("err_title"),
+                        t("kb_conflict", key=_seq_label(new_seq),
+                          name=t(f"kb_act_{other_action}")),
+                        parent=top)
+                    return
+            result["pair"] = (action_ids[combo.current()], new_seq)
+            top.destroy()
+
+        btns = tk.Frame(top)
+        btns.pack(fill=tk.X, padx=14, pady=(0, 12))
+        tk.Button(btns, text=t("btn_cancel"), command=top.destroy).pack(side=tk.RIGHT, padx=4)
+        tk.Button(btns, text=t("btn_apply"), command=ok).pack(side=tk.RIGHT)
+
+        top.wait_window()
+        parent.grab_set()
+        return result.get("pair")
 
     # ── mode management ───────────────────────────────────────────────────────
 
@@ -691,9 +958,6 @@ class GelCaptionApp:
             messagebox.showerror(t("err_title"), t("msg_csv_error", exc=exc))
 
     def _apply_wells(self):
-        if not self._csv_names:
-            messagebox.showwarning(t("warn_title"), t("msg_no_csv"))
-            return
         if self.state.image_visible is None:
             messagebox.showwarning(t("warn_title"), t("msg_no_image"))
             return
@@ -707,13 +971,21 @@ class GelCaptionApp:
         if n < 1:
             messagebox.showerror(t("err_title"), t("msg_wells_min1"))
             return
-        names = self._csv_names[:n]
+        if self._csv_names:
+            names = self._csv_names[:n]
+            auto_numbered = False
+        else:
+            names = [str(i) for i in range(1, n + 1)]
+            auto_numbered = True
         self.state.sample_annotations = []
         for i, name in enumerate(names):
             x = left_x if n == 1 else left_x + i * (right_x - left_x) / (n - 1)
             self.state.sample_annotations.append(SampleAnnotation(x_img=x, name=name))
         self.gel_canvas.refresh()
-        self._set_status(t("msg_wells_applied", n=len(names)))
+        if auto_numbered:
+            self._set_status(t("msg_wells_applied_auto", n=len(names)))
+        else:
+            self._set_status(t("msg_wells_applied", n=len(names)))
 
     def _clear_wells(self):
         self.state.sample_annotations.clear()
