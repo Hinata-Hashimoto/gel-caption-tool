@@ -1,8 +1,6 @@
 # GelAnnotator
-
+ゲル電気泳動画像を半自動でアノテーションするデスクトップアプリです。慣れれば30秒で編集が終わります。**releaseから最新バージョンをダウンロードしてください。windows版、Mac版両方あります。**
 A desktop application for semi-automatic annotation of gel electrophoresis images.  
-ゲル電気泳動画像を半自動でアノテーションするデスクトップアプリです。慣れれば30秒で編集が終わります。
-
 
 https://github.com/user-attachments/assets/5d3413db-3961-456e-9a16-19554abdc0c8
 
@@ -11,7 +9,7 @@ https://github.com/user-attachments/assets/5d3413db-3961-456e-9a16-19554abdc0c8
 
 # GelAnnotator 操作ガイド / User Guide
 
-電気泳動ゲル・ウェスタンブロット画像に、分子量マーカー・サンプル名・バンド位置・領域ラベルを素早く書き込んで、PNG / SVG / PPTXとして書き出すためのデスクトップツールです。macOS / Windows共通、インストール不要、キーボードショートカットは自由に変更できます。**releaseから最新バージョンをダウンロードしてください。windows版、Mac版両方あります。**
+電気泳動ゲル・ウェスタンブロット画像に、分子量マーカー・サンプル名・バンド位置・領域ラベルを素早く書き込んで、PNG / SVG / PPTXとして書き出すためのデスクトップツールです。macOS / Windows共通、インストール不要、キーボードショートカットは自由に変更できます。
 
 A desktop tool for quickly labeling gel and Western blot images with molecular-weight ladders, sample names, band markers, and region labels, then exporting to PNG, SVG, or PPTX. Works on macOS and Windows, needs no install, and every keyboard shortcut is customizable.
 
