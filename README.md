@@ -65,9 +65,10 @@ A desktop tool for quickly labeling gel and Western blot images with molecular-w
 
 左のサイドバーに全ての操作が並び、右側の黒いキャンバスに画像とアノテーションが表示されます。下の画面例は、ラダー・8つのサンプル名・バンドマーカー・領域ラベル「test1」を実際に配置した状態です。
 
-![画面全体（日本語）](guide_images/ui_ja_full.png)
+<img width="2400" height="1576" alt="image" src="https://github.com/user-attachments/assets/02a03edb-0446-47a2-a4dd-175fdaa18761" />
 
-![サイドバー拡大（日本語）](guide_images/ui_ja_sidebar.png)
+
+<img width="400" height="1576" alt="image" src="https://github.com/user-attachments/assets/9b60c726-4cc1-49e9-adb6-1692620b44c5" />
 
 - **キャンバス上部の余白**にはサンプル名が縦書きで、**左側の余白**にはラダーのサイズラベルが表示されます。
 - 画面下部には現在のモードに応じた操作ヒント（ステータス）が表示されます。
@@ -169,7 +170,7 @@ A desktop tool for quickly labeling gel and Western blot images with molecular-w
 | WBモード切替 | `W` |
 | ラダーをリセット | `R` |
 
-![ショートカットキーの設定ダイアログ（日本語）](guide_images/ui_ja_shortcuts.png)
+<img width="960" height="856" alt="image" src="https://github.com/user-attachments/assets/525a6f53-4866-4c83-8bca-6e16de939cb2" />
 
 **ショートカットを変更する** — `Edit > Keyboard Shortcuts…` から変更できます。
 
@@ -236,9 +237,10 @@ The full path from opening an image to exporting a captioned figure.
 
 Every control lives in the left sidebar; the dark canvas on the right shows the image and its annotations. The screenshot below shows a ladder, eight sample names, a band marker, and a region label ("test1") all placed.
 
-![Full window (English)](guide_images/ui_en_full.png)
+<img width="2400" height="1576" alt="image" src="https://github.com/user-attachments/assets/078681fd-6d48-440d-9cab-ceb0b17a78a3" />
 
-![Sidebar close-up (English)](guide_images/ui_en_sidebar.png)
+<img width="400" height="1576" alt="image" src="https://github.com/user-attachments/assets/f48a7cbf-e883-4157-b961-edf5de5264dc" />
+
 
 - The **top margin** of the canvas carries vertical sample-name labels; the **left margin** carries ladder size labels.
 - The status line at the bottom shows a hint for whatever mode is active.
@@ -340,7 +342,8 @@ The default shortcuts. Letter keys respond with or without Shift.
 | Toggle WB Mode | `W` |
 | Reset Ladder | `R` |
 
-![Keyboard Shortcuts dialog (English)](guide_images/ui_en_shortcuts.png)
+<img width="960" height="856" alt="image" src="https://github.com/user-attachments/assets/6acfa88f-9836-4d28-9936-7223c84f9051" />
+
 
 **Changing a shortcut** — Open `Edit > Keyboard Shortcuts…`.
 
